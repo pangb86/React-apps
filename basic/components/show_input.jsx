@@ -23,7 +23,7 @@ class ShowInput extends React.Component {
           onChange={this.update('display')}
           className='text-input'
         />
-      <div className="show-name-display">{this.state.display}</div>
+        <div className="show-name-display">{this.state.display}</div>
       </div>
     );
   }
