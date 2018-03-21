@@ -22,6 +22,7 @@ class ShowInput extends React.Component {
           type="text"
           onChange={this.update('display')}
           className='text-input'
+          value={this.state.display}
         />
         <div className="show-name-display">{this.state.display}</div>
       </div>
