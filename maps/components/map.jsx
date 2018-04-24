@@ -24,8 +24,25 @@ class MapPage extends React.Component {
   constructor() {
     super();
     this.state = {
-
-    };
+          // array of Google Maps Marker objects
+          markers: [],
+          // boolean indicating if the bike layer is displayed
+          layerOn: false,
+          // distance of the route in miles
+          distance: null,
+          // distance of the route in a string
+          distString: "",
+          // elevation gain of the route
+          elevation: null,
+          // elevation gain in a string
+          eleString: "",
+          // polyline string needed to re-render the route on a Google map
+          polyline: "",
+          // boolean indicating if the create button is disabled
+          createDisabled: true,
+          // boolean indicating if the errors icon should be visible
+          showErrors: false
+        };
   }
 
   componentDidMount() {
