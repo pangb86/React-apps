@@ -70,6 +70,116 @@ class MapPage extends React.Component {
     // this.addMapListeners();
   }
 
+  addMapListeners() {
+    // adds event listener for clicking on the Google map
+    // calls placeMarker when map is clicked
+    google.maps.event.addListener(this.route_map, 'click', (event) => {
+      placeMarker(event.latLng);
+    });
+    // place marker callback
+    const placeMarker = (location) => {
+      // constrains total number of markers to 2
+      if (this.state.markers.length < 2) {
+        // place marker at the point clicked on the map
+        // position is a Google Maps LatLng object
+        const marker = new google.maps.Marker({
+          position: location,
+          map: this.route_map
+        });
+        // add marker to the markers array
+        this.state.markers.push(marker);
+        // add event listener to every marker that removes it
+        // upon clicking on it
+        google.maps.event.addListener(marker, 'click', () => {
+          // removes marker from the map
+          marker.setMap(null);
+          // removes marker from the markers array
+          const markerIdx = this.state.markers.indexOf(marker);
+          if (markerIdx > -1) {
+            this.state.markers.splice(markerIdx, 1);
+          }
+        });
+      }
+      // if there are two markers make a directions request
+      if (this.state.markers.length === 2) {
+        this.createRouteRequest();
+      }
+    };
+  }
+
+  createRouteRequest() {
+    // creates routeRequest object with the starting point being the first
+    // marker location and the destination being the second marker location
+    const routeRequest = {
+      origin: this.state.markers[0].getPosition(),
+      destination: this.state.markers[1].getPosition(),
+      travelMode: "BICYCLING",
+    };
+    // calls Google Maps API for directions
+    directionsService.route(routeRequest, (directions, status) => {
+      // if the status is OK, it will render the route on the map
+      if (status === 'OK') {
+        // removes the visibility of the errors icon
+        this.setState({showErrors: false});
+        // sets the direction display object to the route map
+        // and renders it
+        directionsDisplay.setMap(this.route_map);
+        directionsDisplay.setDirections(directions);
+        // enables the create route button
+        this.setState({createDisabled: false});
+        // stores the polyline string of the route in the local state
+        this.setState({polyline: directions.routes[0].overview_polyline});
+
+        // console.log(this.state.polyline);
+
+        // coverts the route distance to miles
+        const distLong = directions.routes[0].legs[0].distance.value / 1609.34;
+        // rounds route distance to one decimal place
+        const dist = Math.round(distLong * 10) / 10;
+        // sets distance in the local state
+        this.setState({distance: dist});
+        // sets the distance string in the local state
+        this.setState({distString: directions.routes[0].legs[0].distance.text});
+        // store the route's path of LatLng objects as an array
+        const pathArr = directions.routes[0].overview_path;
+        // call Google Maps elevation service withe the path array
+        // and calls getElevationChange passing it the response
+        elevationService.getElevationAlongPath({
+          'path': pathArr,
+          'samples': 256
+        }, this.getElevationChange);
+        // clears the markers from the map and the markers array
+        this.state.markers[0].setMap(null);
+        this.state.markers[1].setMap(null);
+        this.setState({markers: []});
+      }
+    });
+
+  }
+
+  // calculates the total elevation gain over a path
+  // TODO: Plot the elevation profile
+  getElevationChange(elevations, status) {
+    // checks if the status is OK
+    if (status === "OK") {
+      let totalElevation = 0;
+      // loop over elevations array returned by Google Maps service
+      for (var i = 1; i < elevations.length; i++) {
+        // checks for increase in elevation and adds it to the total
+        if (elevations[i].elevation > elevations[i - 1].elevation) {
+          let change = elevations[i].elevation - elevations[i -1].elevation;
+          totalElevation += change;
+        }
+      }
+      // convert total elevation to feet and round it to the nearest foot
+      totalElevation = Math.round(totalElevation * 3.28084);
+      // sets the elevation of the local state
+      this.setState({elevation: totalElevation});
+      // sets the elevation string of the local state
+      this.setState({eleString: `${totalElevation} ft`});
+    }
+  }
+
   render() {
     return (
       <div className="maps-main">
