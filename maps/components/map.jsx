@@ -180,6 +180,8 @@ class MapPage extends React.Component {
     }
   }
 
+  // Use Chart JS or Google Charts
+
   render() {
     return (
       <div className="maps-main">
