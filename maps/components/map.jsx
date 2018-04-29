@@ -182,6 +182,62 @@ class MapPage extends React.Component {
 
   // Use Chart JS or Google Charts
 
+  // toggles bicycling layer on the map upon clicking the bicycling
+  // layer button
+  toggleBikeLayer() {
+    // toggles bicycling layer based on layerOn boolean
+    if (this.state.layerOn) {
+      bikeLayer.setMap(null);
+      this.setState({layerOn: false});
+    } else {
+      bikeLayer.setMap(this.route_map);
+      this.setState({layerOn: true});
+    }
+  }
+
+  // updates the state of the title based on input
+  update(field) {
+    return e => this.setState({[field]: e.currentTarget.value});
+  }
+
+  // fires on clicking the create route button
+  handleSubmit(e) {
+    e.preventDefault();
+    // creates routes object for createRoute AJAX call
+    const routes = {
+      title: this.state.title,
+      distance: this.state.distance,
+      elevation: this.state.elevation,
+      polyline: this.state.polyline
+    };
+    // AJAX call for creating the route
+    this.props.createRoute({ routes })
+    // redirect to routes index page
+    .then(() => this.props.history.push("/routes"));
+  }
+
+  // display route errors
+  renderErrors() {
+    if (this.props.errors.length > 0) {
+      return(
+        <ul className="routes-errors">
+          {this.props.errors.map((error, i) => (
+            <li key={`error-${i}`}>
+              {error}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+  }
+
+  // sets visibility of the errors icon
+  componentWillReceiveProps(newProps) {
+    if (newProps.errors.length > 0) {
+      this.setState({showErrors: true});
+    }
+  }
+
   render() {
     return (
       <div className="maps-main">
